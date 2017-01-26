@@ -59,7 +59,7 @@ class Place {
   /**
    * this method adds a ant object into the system.
    * @param ant is a given ant object.
-   * @returns returns whether this ant is a guard.
+   * @returns returns whether this place has successfully been set.
    */
   addAnt(ant: Ant): boolean {
     // places guard ant if it exists.

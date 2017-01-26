@@ -1,5 +1,5 @@
 "use strict";
-var vorpal = require("vorpal");
+var vorpal = require('vorpal');
 var chalk = require("chalk");
 var _ = require("lodash");
 var Vorpal = vorpal();
