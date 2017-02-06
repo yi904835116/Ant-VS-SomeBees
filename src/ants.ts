@@ -222,11 +222,19 @@ export class ThrowerAnt extends Ant {
  * defines a Eater ant with 2 armor, 4 food consumption and ability to eat the bee.
  */
 export class EaterAnt extends Ant {
+  private hungry: number = 0;
+  private digest1: number = 1;
+  private digest2: number = 2;
+  private digest3: number = 3;
+  private digested: number = 4;
+
+  private current: number;
+
   readonly name: string = "Eater";
-  private turnsEating: number = 0;
   private stomach: Place = new Place('stomach');
   constructor() {
     super(2, 4)
+    this.current = this.hungry;
   }
 
   isFull(): boolean {
@@ -237,8 +245,8 @@ export class EaterAnt extends Ant {
    * defines the action of Eater ant that swallows a bee and takes 3 turns to digest it.
    */
   act() {
-    console.log("eating: " + this.turnsEating);
-    if (this.turnsEating == 0) {
+    console.log("eating: " + this.current);
+    if (this.current == this.hungry) {
       // able to swallow a bee.
       console.log("try to eat");
       let target = this.place.getClosestBee(0);
@@ -246,17 +254,17 @@ export class EaterAnt extends Ant {
         console.log(this + ' eats ' + target + '!');
         this.place.removeBee(target);
         this.stomach.addBee(target);
-        this.turnsEating = 1;
+        this.current = this.digest1;
       }
+    } else if (this.current == this.digest1) {
+      this.current = this.digest2;
+    } else if (this.current == this.digest2) {
+      this.current = this.digest3;
+    } else if (this.current == this.digest3) {
+      this.current = this.digested;
     } else {
-      if (this.turnsEating > 3) {
-        // after three rounds, Eater finishs digesting a bee and able to swallow the next one.
-        this.stomach.removeBee(this.stomach.getBees()[0]);
-        this.turnsEating = 0;
-      }
-      else
-        // counting the digesting rounds.
-        this.turnsEating++;
+      this.stomach.removeBee(this.stomach.getBees()[0]);
+      this.current = this.hungry;
     }
   }
 
@@ -268,28 +276,33 @@ export class EaterAnt extends Ant {
     this.armor -= amount;
     console.log('armor reduced to: ' + this.armor);
     // if the Eater's armor is still large than 0, alive.
-    if (this.armor > 0) {
-      // if it just digests the bee a round, it can't destroy the bee and throw it back.
-      if (this.turnsEating == 1) {
+    if (this.current = this.hungry) {
+      return false;
+    } else if (this.current == this.digest1) {
+      let eaten = this.stomach.getBees()[0];
+      this.stomach.removeBee(eaten);
+      this.place.addBee(eaten);
+      console.log(this + ' coughs up ' + eaten + '!');
+      if (this.armor > 0) {
+        this.current = this.digest3;
+        return false;
+      } else {
+        return super.reduceArmor(amount);
+      }
+    } else if (this.current == this.digest2) {
+      if (this.armor <= 0) {
         let eaten = this.stomach.getBees()[0];
         this.stomach.removeBee(eaten);
         this.place.addBee(eaten);
         console.log(this + ' coughs up ' + eaten + '!');
-        this.turnsEating = 3;
+        return super.reduceArmor(amount);
       }
+      return false;
+    } else if (this.current == this.digest3) {
+      return false;
+    } else {
+      return false;
     }
-    // if the Eater is dead
-    else if (this.armor <= 0) {
-      // if the he have a target to digest and less than two rounds, it can't destroy the bee and throw it back.
-      if (this.turnsEating > 0 && this.turnsEating <= 2) {
-        let eaten = this.stomach.getBees()[0];
-        this.stomach.removeBee(eaten);
-        this.place.addBee(eaten);
-        console.log(this + ' coughs up ' + eaten + '!');
-      }
-      return super.reduceArmor(amount);
-    }
-    return false;
   }
 }
 
@@ -374,23 +387,23 @@ export class GuardAnt extends Ant {
 }
 
 
-interface GenerateBoost{
-  (colony:AntColony):void;
+interface GenerateBoost {
+  (colony: AntColony): void;
 }
 
-let generateBoost:GenerateBoost = function(colony:AntColony){
-    let roll = Math.random();
-    if (roll < 0.6) {
-      colony.increaseFood(1);
-    } else if (roll < 0.7) {
-      colony.addBoost('FlyingLeaf');
-    } else if (roll < 0.8) {
-      colony.addBoost('StickyLeaf');
-    } else if (roll < 0.9) {
-      colony.addBoost('IcyLeaf');
-    } else if (roll < 0.95) {
-      colony.addBoost('BugSpray');
-    }
+let generateBoost: GenerateBoost = function (colony: AntColony) {
+  let roll = Math.random();
+  if (roll < 0.6) {
+    colony.increaseFood(1);
+  } else if (roll < 0.7) {
+    colony.addBoost('FlyingLeaf');
+  } else if (roll < 0.8) {
+    colony.addBoost('StickyLeaf');
+  } else if (roll < 0.9) {
+    colony.addBoost('IcyLeaf');
+  } else if (roll < 0.95) {
+    colony.addBoost('BugSpray');
+  }
 }
 
 
@@ -398,7 +411,7 @@ let generateBoost:GenerateBoost = function(colony:AntColony){
 // strategy pattern
 interface SetBoostFunction {
   (ant: Ant, boost: string, place: Place, damage: number): void;
-  
+
 }
 
 let boostFunction: SetBoostFunction = function (ant: Ant, boost: string, place: Place, damage: number) {
