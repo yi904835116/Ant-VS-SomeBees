@@ -5,6 +5,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var game_1 = require("./game");
+var chalk = require("chalk");
 var Insect = (function () {
     function Insect(armor, place) {
         this.armor = armor;
@@ -85,22 +86,7 @@ var GrowerAnt = (function (_super) {
         return _this;
     }
     GrowerAnt.prototype.act = function (colony) {
-        var roll = Math.random();
-        if (roll < 0.6) {
-            colony.increaseFood(1);
-        }
-        else if (roll < 0.7) {
-            colony.addBoost('FlyingLeaf');
-        }
-        else if (roll < 0.8) {
-            colony.addBoost('StickyLeaf');
-        }
-        else if (roll < 0.9) {
-            colony.addBoost('IcyLeaf');
-        }
-        else if (roll < 0.95) {
-            colony.addBoost('BugSpray');
-        }
+        generateBoost(colony);
     };
     return GrowerAnt;
 }(Ant));
@@ -114,35 +100,7 @@ var ThrowerAnt = (function (_super) {
         return _this;
     }
     ThrowerAnt.prototype.act = function () {
-        if (this.boost !== 'BugSpray') {
-            var target = void 0;
-            if (this.boost === 'FlyingLeaf')
-                target = this.place.getClosestBee(5);
-            else
-                target = this.place.getClosestBee(3);
-            if (target) {
-                console.log(this + ' throws a leaf at ' + target);
-                target.reduceArmor(this.damage);
-                if (this.boost === 'StickyLeaf') {
-                    target.setStatus('stuck');
-                    console.log(target + ' is stuck!');
-                }
-                if (this.boost === 'IcyLeaf') {
-                    target.setStatus('cold');
-                    console.log(target + ' is cold!');
-                }
-                this.boost = undefined;
-            }
-        }
-        else {
-            console.log(this + ' sprays bug repellant everywhere!');
-            var target = this.place.getClosestBee(0);
-            while (target) {
-                target.reduceArmor(10);
-                target = this.place.getClosestBee(0);
-            }
-            this.reduceArmor(10);
-        }
+        boostFunction(this, this.boost, this.place, this.damage);
     };
     return ThrowerAnt;
 }(Ant));
@@ -215,35 +173,7 @@ var ScubaAnt = (function (_super) {
         return _this;
     }
     ScubaAnt.prototype.act = function () {
-        if (this.boost !== 'BugSpray') {
-            var target = void 0;
-            if (this.boost === 'FlyingLeaf')
-                target = this.place.getClosestBee(5);
-            else
-                target = this.place.getClosestBee(3);
-            if (target) {
-                console.log(this + ' throws a leaf at ' + target);
-                target.reduceArmor(this.damage);
-                if (this.boost === 'StickyLeaf') {
-                    target.setStatus('stuck');
-                    console.log(target + ' is stuck!');
-                }
-                if (this.boost === 'IcyLeaf') {
-                    target.setStatus('cold');
-                    console.log(target + ' is cold!');
-                }
-                this.boost = undefined;
-            }
-        }
-        else {
-            console.log(this + ' sprays bug repellant everywhere!');
-            var target = this.place.getClosestBee(0);
-            while (target) {
-                target.reduceArmor(10);
-                target = this.place.getClosestBee(0);
-            }
-            this.reduceArmor(10);
-        }
+        boostFunction(this, this.boost, this.place, this.damage);
     };
     return ScubaAnt;
 }(Ant));
@@ -262,4 +192,103 @@ var GuardAnt = (function (_super) {
     return GuardAnt;
 }(Ant));
 exports.GuardAnt = GuardAnt;
+var generateBoost = function (colony) {
+    var roll = Math.random();
+    if (roll < 0.6) {
+        colony.increaseFood(1);
+    }
+    else if (roll < 0.7) {
+        colony.addBoost('FlyingLeaf');
+    }
+    else if (roll < 0.8) {
+        colony.addBoost('StickyLeaf');
+    }
+    else if (roll < 0.9) {
+        colony.addBoost('IcyLeaf');
+    }
+    else if (roll < 0.95) {
+        colony.addBoost('BugSpray');
+    }
+};
+var boostFunction = function (ant, boost, place, damage) {
+    if (boost !== 'BugSpray') {
+        var target = void 0;
+        if (boost === 'FlyingLeaf')
+            target = place.getClosestBee(5);
+        else
+            target = place.getClosestBee(3);
+        if (target) {
+            console.log(ant + ' throws a leaf at ' + target);
+            target.reduceArmor(damage);
+            if (boost === 'StickyLeaf') {
+                target.setStatus('stuck');
+                console.log(target + ' is stuck!');
+            }
+            if (boost === 'IcyLeaf') {
+                target.setStatus('cold');
+                console.log(target + ' is cold!');
+            }
+            boost = undefined;
+        }
+    }
+    else {
+        console.log(ant + ' sprays bug repellant everywhere!');
+        var target = place.getClosestBee(0);
+        while (target) {
+            target.reduceArmor(10);
+            target = place.getClosestBee(0);
+        }
+        ant.reduceArmor(10);
+    }
+};
+var AntFactory = (function () {
+    function AntFactory() {
+    }
+    AntFactory.prototype.createAntObject = function (type) {
+        switch (type.toLowerCase()) {
+            case "grower":
+                return new GrowerAnt();
+            case "thrower":
+                return new ThrowerAnt();
+            case "eater":
+                return new EaterAnt();
+            case "scuba":
+                return new ScubaAnt();
+            case "guard":
+                return new GuardAnt();
+            default:
+                return null;
+        }
+    };
+    AntFactory.prototype.createAntSymbol = function (ant) {
+        if (ant.name == "Grower") {
+            return chalk.green('G');
+        }
+        else if (ant.name == "Thrower") {
+            return chalk.red('T');
+            ;
+        }
+        else if (ant.name == "Eater") {
+            if (ant.isFull())
+                return chalk.yellow.bgMagenta('E');
+            else {
+                return chalk.magenta('E');
+            }
+        }
+        else if (ant.name == "Scuba") {
+            return chalk.cyan('S');
+        }
+        else if (ant.name == "Guard") {
+            var guarded = ant.getGuarded();
+            if (guarded) {
+                return chalk.underline(new AntFactory().createAntSymbol(guarded));
+            }
+            else {
+                return chalk.underline('x');
+            }
+        }
+    };
+    return AntFactory;
+}());
+exports.AntFactory = AntFactory;
 //# sourceMappingURL=ants.js.map

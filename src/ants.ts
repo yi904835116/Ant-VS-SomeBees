@@ -1,4 +1,10 @@
 import { AntColony, Place } from './game';
+import chalk = require('chalk');
+
+
+
+
+
 
 /**
  * An skeleton of insects with different properties: name, armor, place and act.
@@ -77,9 +83,9 @@ export class Bee extends Insect {
 
   setStatus(status: string) { this.status = status; }
 
-/**
- * Defines a particular action of a this bee whether it attacks or not. 
- */
+  /**
+   * Defines a particular action of a this bee whether it attacks or not. 
+   */
   act() {
     // if there exists an ant.
     if (this.isBlocked()) {
@@ -105,9 +111,9 @@ export abstract class Ant extends Insect {
     super(armor, place);
   }
 
-/**
- * @returns the number of food it costs to deploy this ant
- */
+  /**
+   * @returns the number of food it costs to deploy this ant
+   */
   getFoodCost(): number { return this.foodCost; }
 
   /**
@@ -139,18 +145,19 @@ export class GrowerAnt extends Ant {
    *  else produce BugSpray
    */
   act(colony: AntColony) {
-    let roll = Math.random();
-    if (roll < 0.6) {
-      colony.increaseFood(1);
-    } else if (roll < 0.7) {
-      colony.addBoost('FlyingLeaf');
-    } else if (roll < 0.8) {
-      colony.addBoost('StickyLeaf');
-    } else if (roll < 0.9) {
-      colony.addBoost('IcyLeaf');
-    } else if (roll < 0.95) {
-      colony.addBoost('BugSpray');
-    }
+    generateBoost(colony);
+    // let roll = Math.random();
+    // if (roll < 0.6) {
+    //   colony.increaseFood(1);
+    // } else if (roll < 0.7) {
+    //   colony.addBoost('FlyingLeaf');
+    // } else if (roll < 0.8) {
+    //   colony.addBoost('StickyLeaf');
+    // } else if (roll < 0.9) {
+    //   colony.addBoost('IcyLeaf');
+    // } else if (roll < 0.95) {
+    //   colony.addBoost('BugSpray');
+    // }
   }
 }
 
@@ -161,6 +168,8 @@ export class ThrowerAnt extends Ant {
   readonly name: string = "Thrower";
   private damage: number = 1;
 
+
+
   constructor() {
     super(1, 4);
   }
@@ -169,42 +178,43 @@ export class ThrowerAnt extends Ant {
    * defines the action of theThrower ant to attack the bee based on different boosts.
    */
   act() {
-    if (this.boost !== 'BugSpray') {
-      let target;
-      // if FlyingLeaf boost is applied, extend the its attacking range to 5. If not, its attack range is 3.
-      if (this.boost === 'FlyingLeaf')
-        target = this.place.getClosestBee(5);
-      else
-        target = this.place.getClosestBee(3);
+    boostFunction(this, this.boost, this.place, this.damage);
+    // if (this.boost !== 'BugSpray') {
+    //   let target;
+    //   // if FlyingLeaf boost is applied, extend the its attacking range to 5. If not, its attack range is 3.
+    //   if (this.boost === 'FlyingLeaf')
+    //     target = this.place.getClosestBee(5);
+    //   else
+    //     target = this.place.getClosestBee(3);
 
-      if (target) {
-        console.log(this + ' throws a leaf at ' + target);
-        target.reduceArmor(this.damage);
-        // deploys StickyLeaf boost to stick a bee.
-        if (this.boost === 'StickyLeaf') {
-          target.setStatus('stuck');
-          console.log(target + ' is stuck!');
-        }
-        // deploys IcyLeaf boost to freeze a bee.    
-        if (this.boost === 'IcyLeaf') {
-          target.setStatus('cold');
-          console.log(target + ' is cold!');
-        }
-        // resets the boost.
-        this.boost = undefined;
-      }
-    }
+    //   if (target) {
+    //     console.log(this + ' throws a leaf at ' + target);
+    //     target.reduceArmor(this.damage);
+    //     // deploys StickyLeaf boost to stick a bee.
+    //     if (this.boost === 'StickyLeaf') {
+    //       target.setStatus('stuck');
+    //       console.log(target + ' is stuck!');
+    //     }
+    //     // deploys IcyLeaf boost to freeze a bee.    
+    //     if (this.boost === 'IcyLeaf') {
+    //       target.setStatus('cold');
+    //       console.log(target + ' is cold!');
+    //     }
+    //     // resets the boost.
+    //     this.boost = undefined;
+    //   }
+    // }
 
-    // if the BugSpray boost is applied, the boost destroy all the insects in that tunnel by 10 armor.
-    else {
-      console.log(this + ' sprays bug repellant everywhere!');
-      let target = this.place.getClosestBee(0);
-      while (target) {
-        target.reduceArmor(10);
-        target = this.place.getClosestBee(0);
-      }
-      this.reduceArmor(10);
-    }
+    // // if the BugSpray boost is applied, the boost destroy all the insects in that tunnel by 10 armor.
+    // else {
+    //   console.log(this + ' sprays bug repellant everywhere!');
+    //   let target = this.place.getClosestBee(0);
+    //   while (target) {
+    //     target.reduceArmor(10);
+    //     target = this.place.getClosestBee(0);
+    //   }
+    //   this.reduceArmor(10);
+    // }
   }
 }
 
@@ -228,7 +238,7 @@ export class EaterAnt extends Ant {
    */
   act() {
     console.log("eating: " + this.turnsEating);
-    if (this.turnsEating == 0) {     
+    if (this.turnsEating == 0) {
       // able to swallow a bee.
       console.log("try to eat");
       let target = this.place.getClosestBee(0);
@@ -239,7 +249,7 @@ export class EaterAnt extends Ant {
         this.turnsEating = 1;
       }
     } else {
-      if (this.turnsEating > 3) { 
+      if (this.turnsEating > 3) {
         // after three rounds, Eater finishs digesting a bee and able to swallow the next one.
         this.stomach.removeBee(this.stomach.getBees()[0]);
         this.turnsEating = 0;
@@ -290,6 +300,7 @@ export class ScubaAnt extends Ant {
   readonly name: string = "Scuba";
   private damage: number = 1;
 
+
   constructor() {
     super(1, 5)
   }
@@ -297,41 +308,42 @@ export class ScubaAnt extends Ant {
   // defines the action of Scuba ant and applies the boost if any.
   act() {
     // if the boost is not BugSpray
-    if (this.boost !== 'BugSpray') {
-      let target;
-      if (this.boost === 'FlyingLeaf')
-        target = this.place.getClosestBee(5);
-      else
-        target = this.place.getClosestBee(3);
+    boostFunction(this, this.boost, this.place, this.damage);
+    // if (this.boost !== 'BugSpray') {
+    //   let target;
+    //   if (this.boost === 'FlyingLeaf')
+    //     target = this.place.getClosestBee(5);
+    //   else
+    //     target = this.place.getClosestBee(3);
 
-      // if the Scuba ant have the closest target.
-      if (target) {
-        console.log(this + ' throws a leaf at ' + target);
-        target.reduceArmor(this.damage);
+    //   // if the Scuba ant have the closest target.
+    //   if (target) {
+    //     console.log(this + ' throws a leaf at ' + target);
+    //     target.reduceArmor(this.damage);
 
-        // applies StickyLeaf boost on this Scuba ant.
-        if (this.boost === 'StickyLeaf') {
-          target.setStatus('stuck');
-          console.log(target + ' is stuck!');
-        }
-        // applies IcyLeaf boost on this Scuba ant.
-        if (this.boost === 'IcyLeaf') {
-          target.setStatus('cold');
-          console.log(target + ' is cold!');
-        }
-        this.boost = undefined;
-      }
-    }
-    // applies BugSpray boost on this Scuba ant that kills all of the insects in that tunnel by 10 armor
-    else {
-      console.log(this + ' sprays bug repellant everywhere!');
-      let target = this.place.getClosestBee(0);
-      while (target) {
-        target.reduceArmor(10);
-        target = this.place.getClosestBee(0);
-      }
-      this.reduceArmor(10);
-    }
+    //     // applies StickyLeaf boost on this Scuba ant.
+    //     if (this.boost === 'StickyLeaf') {
+    //       target.setStatus('stuck');
+    //       console.log(target + ' is stuck!');
+    //     }
+    //     // applies IcyLeaf boost on this Scuba ant.
+    //     if (this.boost === 'IcyLeaf') {
+    //       target.setStatus('cold');
+    //       console.log(target + ' is cold!');
+    //     }
+    //     this.boost = undefined;
+    //   }
+    // }
+    // // applies BugSpray boost on this Scuba ant that kills all of the insects in that tunnel by 10 armor
+    // else {
+    //   console.log(this + ' sprays bug repellant everywhere!');
+    //   let target = this.place.getClosestBee(0);
+    //   while (target) {
+    //     target.reduceArmor(10);
+    //     target = this.place.getClosestBee(0);
+    //   }
+    //   this.reduceArmor(10);
+    // }
   }
 }
 
@@ -356,4 +368,231 @@ export class GuardAnt extends Ant {
    * the Guard ant doesn't have any specific action.
    */
   act() { }
+
+
+
 }
+
+
+interface GenerateBoost{
+  (colony:AntColony):void;
+}
+
+let generateBoost:GenerateBoost = function(colony:AntColony){
+    let roll = Math.random();
+    if (roll < 0.6) {
+      colony.increaseFood(1);
+    } else if (roll < 0.7) {
+      colony.addBoost('FlyingLeaf');
+    } else if (roll < 0.8) {
+      colony.addBoost('StickyLeaf');
+    } else if (roll < 0.9) {
+      colony.addBoost('IcyLeaf');
+    } else if (roll < 0.95) {
+      colony.addBoost('BugSpray');
+    }
+}
+
+
+
+// strategy pattern
+interface SetBoostFunction {
+  (ant: Ant, boost: string, place: Place, damage: number): void;
+  
+}
+
+let boostFunction: SetBoostFunction = function (ant: Ant, boost: string, place: Place, damage: number) {
+
+  if (boost !== 'BugSpray') {
+    let target;
+    if (boost === 'FlyingLeaf')
+      target = place.getClosestBee(5);
+    else
+      target = place.getClosestBee(3);
+
+    // if the Scuba ant have the closest target.
+    if (target) {
+      console.log(ant + ' throws a leaf at ' + target);
+      target.reduceArmor(damage);
+
+      // applies StickyLeaf boost on this Scuba ant.
+      if (boost === 'StickyLeaf') {
+        target.setStatus('stuck');
+        console.log(target + ' is stuck!');
+      }
+      // applies IcyLeaf boost on this Scuba ant.
+      if (boost === 'IcyLeaf') {
+        target.setStatus('cold');
+        console.log(target + ' is cold!');
+      }
+      boost = undefined;
+    }
+  }
+  // applies BugSpray boost on this Scuba ant that kills all of the insects in that tunnel by 10 armor
+  else {
+    console.log(ant + ' sprays bug repellant everywhere!');
+    let target = place.getClosestBee(0);
+    while (target) {
+      target.reduceArmor(10);
+      target = place.getClosestBee(0);
+    }
+    ant.reduceArmor(10);
+  }
+}
+
+
+
+
+export interface Factory {
+  createAntObject(type: string): Ant;
+  createAntSymbol(ant: Ant): String;
+}
+
+export class AntFactory implements Factory {
+  createAntObject(type: string) {
+    switch (type.toLowerCase()) {
+      case "grower":
+        return new GrowerAnt();
+      case "thrower":
+        return new ThrowerAnt();
+      case "eater":
+        return new EaterAnt();
+      case "scuba":
+        return new ScubaAnt();
+      case "guard":
+        return new GuardAnt();
+      default:
+        return null;
+    }
+  }
+
+  createAntSymbol(ant: Ant): String {
+    if (ant.name == "Grower") {
+      return chalk.green('G');
+    } else if (ant.name == "Thrower") {
+      return chalk.red('T');;
+    } else if (ant.name == "Eater") {
+      if ((<EaterAnt>ant).isFull())
+        return chalk.yellow.bgMagenta('E');
+      else {
+        return chalk.magenta('E');
+      }
+    }
+    else if (ant.name == "Scuba") {
+      return chalk.cyan('S');
+    } else if (ant.name == "Guard") {
+      let guarded: Ant = (<GuardAnt>ant).getGuarded();
+      if (guarded) {
+        return chalk.underline(new AntFactory().createAntSymbol(guarded));
+      } else {
+        return chalk.underline('x');
+      }
+    }
+  }
+}
+
+
+// class GrowerAntFactory implements AntFactory {
+
+//   createAntObject(type: string): Ant {
+//     if (type.toLocaleLowerCase() == "grower") {
+//       return new GrowerAnt;
+//     }
+//   }
+
+//   createAntSymbol(ant: Ant) {
+
+//     if (ant.name == "Grower") {
+//       return chalk.green('G');
+//     }
+//   }
+// }
+
+
+// class ThrowerAntFactory implements AntFactory {
+//   createAntObject(type: string): Ant {
+//     if (type.toLocaleLowerCase() == "thrower") {
+//       return new ThrowerAnt;
+//     }
+//   }
+
+//   createAntSymbol(ant) {
+//     if (ant.name == "Thrower") {
+//       return chalk.red('T');;
+//     }
+//   }
+// }
+
+
+// class EaterAntFactory implements AntFactory {
+//   createAntObject(type: string): Ant {
+//     if (type.toLocaleLowerCase() == "eater") {
+//       return new EaterAnt;
+//     }
+//   }
+
+//   createAntSymbol(ant) {
+    // if (ant.name == "Eater") {
+    //   if ((<EaterAnt>ant).isFull())
+    //     return chalk.yellow.bgMagenta('E');
+    //   else {
+    //     return chalk.magenta('E');
+    //   }
+    // }
+//   }
+// }
+
+// class ScubaAntFactory implements AntFactory {
+//   createAntObject(type: string): Ant {
+//     if (type.toLocaleLowerCase() == "scuba") {
+//       return new ScubaAnt;
+//     }
+//   }
+
+//   createAntSymbol(ant) {
+    // if (ant.name == "Scuba") {
+    //   return chalk.cyan('S');
+    // }
+//   }
+// }
+
+// class GuardAntFactory implements AntFactory {
+//   createAntObject(type: string): Ant {
+//     if (type.toLocaleLowerCase() == "guard") {
+//       return new GuardAnt;
+//     }
+//   }
+
+//   createAntSymbol(ant) {
+    // if (ant.name == "Guard") {
+    //   let guarded:Ant = (<GuardAnt>ant).getGuarded();
+    //   if(guarded){
+    //     return chalk.underline(<AntFactory> createAntSymbol(guarded));
+    //   } else {
+    //     return chalk.underline('x'); 
+    //   }
+    // }
+//   }
+// }
+
+
+
+
+// export abstract class antFactory {
+
+//   createAnt(type: string) {
+//     switch (type.toLowerCase()) {
+//       case "grower":
+//         return new GrowerAnt();
+//       case "thrower":
+//         return new ThrowerAnt();
+//       case "eater":
+//         return new EaterAnt();
+//       case "scuba":
+//         return new ScubaAnt();
+//       case "guard":
+//         return new GuardAnt();
+//     }
+//   }
+// }
+

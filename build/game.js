@@ -5,6 +5,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var ants_1 = require("./ants");
+var ants_2 = require("./ants");
 var Place = (function () {
     function Place(name, water, exit, entrance) {
         if (water === void 0) { water = false; }
@@ -280,24 +281,12 @@ var AntGame = (function () {
     };
     AntGame.prototype.deployAnt = function (antType, placeCoordinates) {
         var ant;
-        switch (antType.toLowerCase()) {
-            case "grower":
-                ant = new ants_1.GrowerAnt();
-                break;
-            case "thrower":
-                ant = new ants_1.ThrowerAnt();
-                break;
-            case "eater":
-                ant = new ants_1.EaterAnt();
-                break;
-            case "scuba":
-                ant = new ants_1.ScubaAnt();
-                break;
-            case "guard":
-                ant = new ants_1.GuardAnt();
-                break;
-            default:
-                return 'unknown ant type';
+        var factory = new ants_2.AntFactory();
+        if (factory.createAntObject(antType) != null) {
+            ant = factory.createAntObject(antType);
+        }
+        else {
+            return 'unknown ant type';
         }
         try {
             var coords = placeCoordinates.split(',');

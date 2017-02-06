@@ -1,5 +1,5 @@
 import {AntGame, AntColony, Place, Hive} from './game';
-import {Ant, EaterAnt, GuardAnt} from './ants';
+import {Ant, EaterAnt, GuardAnt, Factory, AntFactory} from './ants';
 
 let vorpal = require('vorpal');
 import chalk = require('chalk');
@@ -91,31 +91,9 @@ function getMap(game:AntGame) {
  */
 function iconFor(ant:Ant){
   if(ant === undefined){ return ' ' };
-  let icon:string;
-  // determines the type of the ant.
-  switch(ant.name){
-    case "Grower":
-      icon = chalk.green('G'); break;
-    case "Thrower":
-      icon = chalk.red('T'); break;
-    case "Eater":
-      if((<EaterAnt>ant).isFull())
-        icon = chalk.yellow.bgMagenta('E');
-      else
-        icon = chalk.magenta('E');
-      break;
-    case "Scuba":
-      icon = chalk.cyan('S'); break;
-    case "Guard":
-      let guarded:Ant = (<GuardAnt>ant).getGuarded();
-      if(guarded){
-        icon = chalk.underline(iconFor(guarded)); break;
-      } else {
-        icon = chalk.underline('x'); break;
-      }
-    default:
-      icon = '?';
-  }
+  var icon:String;
+  var factory:Factory = new AntFactory();
+  icon = factory.createAntSymbol(ant);
   return icon;
 }
 

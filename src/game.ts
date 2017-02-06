@@ -1,12 +1,12 @@
-import { Insect, Bee, Ant, GrowerAnt, ThrowerAnt, EaterAnt, ScubaAnt, GuardAnt } from './ants';
-
+import { Insect, Bee, Ant, GrowerAnt, ThrowerAnt, EaterAnt, ScubaAnt, GuardAnt} from './ants';
+import {Factory, AntFactory} from './ants';
 
 /**
  * This class do the major calculation of movement or types of ant and bee, and judge the geolocation
  */
 class Place {
   protected ant: Ant;
-  protected guard: GuardAnt;
+  protected guard: GuardAnt;  // should delete 
   protected bees: Bee[] = [];
 
   constructor(readonly name: string,
@@ -23,6 +23,8 @@ class Place {
   /**
    * @returns returns current guard if exist otherwise ant.
    */
+
+
   getAnt(): Ant {
     if (this.guard)
       return this.guard;
@@ -425,22 +427,12 @@ class AntGame {
    */
   deployAnt(antType: string, placeCoordinates: string): string {
     let ant;
-    // define the type of this ant
-    switch (antType.toLowerCase()) {
-      case "grower":
-        ant = new GrowerAnt(); break;
-      case "thrower":
-        ant = new ThrowerAnt(); break;
-      case "eater":
-        ant = new EaterAnt(); break;
-      case "scuba":
-        ant = new ScubaAnt(); break;
-      case "guard":
-        ant = new GuardAnt(); break;
-      default:
-        return 'unknown ant type';
+    var factory:Factory = new AntFactory();
+    if(factory.createAntObject(antType) != null){
+      ant = factory.createAntObject(antType) 
+    }else{
+      return 'unknown ant type';
     }
-
     // deploys the ant or return a warning if the geolocation input is not correct.
     try {
       let coords = placeCoordinates.split(',');
