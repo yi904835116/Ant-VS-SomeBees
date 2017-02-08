@@ -1,21 +1,16 @@
 "use strict";
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var game_1 = require("./game");
-var chalk = require("chalk");
-var Insect = (function () {
-    function Insect(armor, place) {
+const game_1 = require("./game");
+const chalk = require("chalk");
+class Insect {
+    constructor(armor, place) {
         this.armor = armor;
         this.place = place;
     }
-    Insect.prototype.getName = function () { return this.name; };
-    Insect.prototype.getArmor = function () { return this.armor; };
-    Insect.prototype.getPlace = function () { return this.place; };
-    Insect.prototype.setPlace = function (place) { this.place = place; };
-    Insect.prototype.reduceArmor = function (amount) {
+    getName() { return this.name; }
+    getArmor() { return this.armor; }
+    getPlace() { return this.place; }
+    setPlace(place) { this.place = place; }
+    reduceArmor(amount) {
         this.armor -= amount;
         if (this.armor <= 0) {
             console.log(this.toString() + ' ran out of armor and expired');
@@ -23,30 +18,27 @@ var Insect = (function () {
             return true;
         }
         return false;
-    };
-    Insect.prototype.toString = function () {
-        return this.name + '(' + (this.place ? this.place.name : '') + ')';
-    };
-    return Insect;
-}());
-exports.Insect = Insect;
-var Bee = (function (_super) {
-    __extends(Bee, _super);
-    function Bee(armor, damage, place) {
-        var _this = _super.call(this, armor, place) || this;
-        _this.damage = damage;
-        _this.name = 'Bee';
-        return _this;
     }
-    Bee.prototype.sting = function (ant) {
+    toString() {
+        return this.name + '(' + (this.place ? this.place.name : '') + ')';
+    }
+}
+exports.Insect = Insect;
+class Bee extends Insect {
+    constructor(armor, damage, place) {
+        super(armor, place);
+        this.damage = damage;
+        this.name = 'Bee';
+    }
+    sting(ant) {
         console.log(this + ' stings ' + ant + '!');
         return ant.reduceArmor(this.damage);
-    };
-    Bee.prototype.isBlocked = function () {
+    }
+    isBlocked() {
         return this.place.getAnt() !== undefined;
-    };
-    Bee.prototype.setStatus = function (status) { this.status = status; };
-    Bee.prototype.act = function () {
+    }
+    setStatus(status) { this.status = status; }
+    act() {
         if (this.isBlocked()) {
             if (this.status !== 'cold') {
                 this.sting(this.place.getAnt());
@@ -58,75 +50,68 @@ var Bee = (function (_super) {
             }
         }
         this.status = undefined;
-    };
-    return Bee;
-}(Insect));
-exports.Bee = Bee;
-var Ant = (function (_super) {
-    __extends(Ant, _super);
-    function Ant(armor, foodCost, place) {
-        if (foodCost === void 0) { foodCost = 0; }
-        var _this = _super.call(this, armor, place) || this;
-        _this.foodCost = foodCost;
-        return _this;
     }
-    Ant.prototype.getFoodCost = function () { return this.foodCost; };
-    Ant.prototype.setBoost = function (boost) {
+}
+exports.Bee = Bee;
+class Ant extends Insect {
+    constructor(armor, foodCost = 0, place) {
+        super(armor, place);
+        this.foodCost = foodCost;
+    }
+    getGuard() {
+        return this.guard;
+    }
+    setGuard(guard) {
+        this.guard = guard;
+    }
+    getFoodCost() { return this.foodCost; }
+    setBoost(boost) {
         this.boost = boost;
         console.log(this.toString() + ' is given a ' + boost);
-    };
-    return Ant;
-}(Insect));
+    }
+}
 exports.Ant = Ant;
-var GrowerAnt = (function (_super) {
-    __extends(GrowerAnt, _super);
-    function GrowerAnt() {
-        var _this = _super.call(this, 1, 1) || this;
-        _this.name = "Grower";
-        return _this;
+class GrowerAnt extends Ant {
+    constructor() {
+        super(1, 1);
+        this.name = "Grower";
     }
-    GrowerAnt.prototype.act = function (colony) {
+    act(colony) {
         generateBoost(colony);
-    };
-    return GrowerAnt;
-}(Ant));
+    }
+}
 exports.GrowerAnt = GrowerAnt;
-var ThrowerAnt = (function (_super) {
-    __extends(ThrowerAnt, _super);
-    function ThrowerAnt() {
-        var _this = _super.call(this, 1, 4) || this;
-        _this.name = "Thrower";
-        _this.damage = 1;
-        return _this;
+class ThrowerAnt extends Ant {
+    constructor() {
+        super(1, 4);
+        this.name = "Thrower";
+        this.damage = 1;
     }
-    ThrowerAnt.prototype.act = function () {
+    act() {
         boostFunction(this, this.boost, this.place, this.damage);
-    };
-    return ThrowerAnt;
-}(Ant));
-exports.ThrowerAnt = ThrowerAnt;
-var EaterAnt = (function (_super) {
-    __extends(EaterAnt, _super);
-    function EaterAnt() {
-        var _this = _super.call(this, 2, 4) || this;
-        _this.hungry = 0;
-        _this.digest1 = 1;
-        _this.digest2 = 2;
-        _this.digest3 = 3;
-        _this.digested = 4;
-        _this.name = "Eater";
-        _this.stomach = new game_1.Place('stomach');
-        _this.current = _this.hungry;
-        return _this;
     }
-    EaterAnt.prototype.isFull = function () {
+}
+exports.ThrowerAnt = ThrowerAnt;
+class EaterAnt extends Ant {
+    constructor() {
+        super(2, 4);
+        this.hungry = 0;
+        this.digest1 = 1;
+        this.digest2 = 2;
+        this.digest3 = 3;
+        this.digested = 4;
+        this.name = "Eater";
+        this.stomach = new game_1.Place('stomach');
+        this.current = this.hungry;
+    }
+    isFull() {
         return this.stomach.getBees().length > 0;
-    };
-    EaterAnt.prototype.act = function () {
+    }
+    act() {
         console.log("eating: " + this.current);
         if (this.current == this.hungry) {
             console.log("try to eat");
-            var target = this.place.getClosestBee(0);
+            let target = this.place.getClosestBee(0);
             if (target) {
                 console.log(this + ' eats ' + target + '!');
                 this.place.removeBee(target);
@@ -147,15 +132,15 @@ var EaterAnt = (function (_super) {
             this.stomach.removeBee(this.stomach.getBees()[0]);
             this.current = this.hungry;
         }
-    };
-    EaterAnt.prototype.reduceArmor = function (amount) {
+    }
+    reduceArmor(amount) {
         this.armor -= amount;
         console.log('armor reduced to: ' + this.armor);
         if (this.current = this.hungry) {
             return false;
         }
         else if (this.current == this.digest1) {
-            var eaten = this.stomach.getBees()[0];
+            let eaten = this.stomach.getBees()[0];
             this.stomach.removeBee(eaten);
             this.place.addBee(eaten);
             console.log(this + ' coughs up ' + eaten + '!');
@@ -164,16 +149,16 @@ var EaterAnt = (function (_super) {
                 return false;
             }
             else {
-                return _super.prototype.reduceArmor.call(this, amount);
+                return super.reduceArmor(amount);
             }
         }
         else if (this.current == this.digest2) {
             if (this.armor <= 0) {
-                var eaten = this.stomach.getBees()[0];
+                let eaten = this.stomach.getBees()[0];
                 this.stomach.removeBee(eaten);
                 this.place.addBee(eaten);
                 console.log(this + ' coughs up ' + eaten + '!');
-                return _super.prototype.reduceArmor.call(this, amount);
+                return super.reduceArmor(amount);
             }
             return false;
         }
@@ -183,40 +168,37 @@ var EaterAnt = (function (_super) {
         else {
             return false;
         }
-    };
-    return EaterAnt;
-}(Ant));
+    }
+}
 exports.EaterAnt = EaterAnt;
-var ScubaAnt = (function (_super) {
-    __extends(ScubaAnt, _super);
-    function ScubaAnt() {
-        var _this = _super.call(this, 1, 5) || this;
-        _this.name = "Scuba";
-        _this.damage = 1;
-        return _this;
+class ScubaAnt extends Ant {
+    constructor() {
+        super(1, 5);
+        this.name = "Scuba";
+        this.damage = 1;
     }
-    ScubaAnt.prototype.act = function () {
+    act() {
         boostFunction(this, this.boost, this.place, this.damage);
-    };
-    return ScubaAnt;
-}(Ant));
-exports.ScubaAnt = ScubaAnt;
-var GuardAnt = (function (_super) {
-    __extends(GuardAnt, _super);
-    function GuardAnt() {
-        var _this = _super.call(this, 2, 4) || this;
-        _this.name = "Guard";
-        return _this;
     }
-    GuardAnt.prototype.getGuarded = function () {
-        return this.place.getGuardedAnt();
-    };
-    GuardAnt.prototype.act = function () { };
-    return GuardAnt;
-}(Ant));
+}
+exports.ScubaAnt = ScubaAnt;
+class GuardAnt extends Ant {
+    constructor() {
+        super(2, 4);
+        this.name = "Guard";
+    }
+    setGuaredAnt(ant) {
+        this.guarded = ant;
+    }
+    getGuarded() {
+        console.log("In GuardAnt return protected");
+        return this.guarded;
+    }
+    act() { }
+}
 exports.GuardAnt = GuardAnt;
-var generateBoost = function (colony) {
-    var roll = Math.random();
+let generateBoost = function (colony) {
+    let roll = Math.random();
     if (roll < 0.6) {
         colony.increaseFood(1);
     }
@@ -233,9 +215,9 @@ var generateBoost = function (colony) {
         colony.addBoost('BugSpray');
     }
 };
-var boostFunction = function (ant, boost, place, damage) {
+let boostFunction = function (ant, boost, place, damage) {
     if (boost !== 'BugSpray') {
-        var target = void 0;
+        let target;
         if (boost === 'FlyingLeaf')
             target = place.getClosestBee(5);
         else
@@ -256,7 +238,7 @@ var boostFunction = function (ant, boost, place, damage) {
     }
     else {
         console.log(ant + ' sprays bug repellant everywhere!');
-        var target = place.getClosestBee(0);
+        let target = place.getClosestBee(0);
         while (target) {
             target.reduceArmor(10);
             target = place.getClosestBee(0);
@@ -264,10 +246,8 @@ var boostFunction = function (ant, boost, place, damage) {
         ant.reduceArmor(10);
     }
 };
-var AntFactory = (function () {
-    function AntFactory() {
-    }
-    AntFactory.prototype.createAntObject = function (type) {
+class AntFactory {
+    createAntObject(type) {
         switch (type.toLowerCase()) {
             case "grower":
                 return new GrowerAnt();
@@ -282,8 +262,8 @@ var AntFactory = (function () {
             default:
                 return null;
         }
-    };
-    AntFactory.prototype.createAntSymbol = function (ant) {
+    }
+    createAntSymbol(ant) {
         if (ant.name == "Grower") {
             return chalk.green('G');
         }
@@ -302,16 +282,18 @@ var AntFactory = (function () {
             return chalk.cyan('S');
         }
         else if (ant.name == "Guard") {
-            var guarded = ant.getGuarded();
-            if (guarded) {
+            console.log("createAntSymbol Guard");
+            let guarded = ant.getGuarded();
+            if (guarded != undefined) {
+                console.log("createAntSymbol Guard undefined");
                 return chalk.underline(new AntFactory().createAntSymbol(guarded));
             }
             else {
+                console.log("createAntSymbol Guard !undefined");
                 return chalk.underline('x');
             }
         }
-    };
-    return AntFactory;
-}());
+    }
+}
 exports.AntFactory = AntFactory;
 //# sourceMappingURL=ants.js.map

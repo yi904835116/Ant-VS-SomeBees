@@ -1,12 +1,11 @@
-import { Insect, Bee, Ant, GrowerAnt, ThrowerAnt, EaterAnt, ScubaAnt, GuardAnt} from './ants';
-import {Factory, AntFactory} from './ants';
+import { Insect, Bee, Ant, GrowerAnt, ThrowerAnt, EaterAnt, ScubaAnt, GuardAnt } from './ants';
+import { Factory, AntFactory } from './ants';
 
 /**
- * This class do the major calculation of movement or types of ant and bee, and judge the geolocation
+ * This class does the major calculation of movement or types of ant and bee, and judges the geolocation
  */
 class Place {
-  protected ant: Ant;
-  protected guard: GuardAnt;  // should delete 
+  protected ant: Ant;  // ant[]
   protected bees: Bee[] = [];
 
   constructor(readonly name: string,
@@ -26,15 +25,16 @@ class Place {
 
 
   getAnt(): Ant {
-    if (this.guard)
-      return this.guard;
+    if (this.ant != undefined && this.ant.getGuard() != undefined)
+      return this.ant.getGuard();
     else
       return this.ant;
   }
 
-  getGuardedAnt(): Ant {
-    return this.ant;
-  }
+  //这里要改一下 应该去掉 然后把其他相应的地方修改
+  // getGuardedAnt(): Ant {
+  //    return this.ant;
+  // }
 
   getBees(): Bee[] { return this.bees; }
 
@@ -65,39 +65,59 @@ class Place {
    */
   addAnt(ant: Ant): boolean {
     // places guard ant if it exists.
-    if (ant instanceof GuardAnt) {
-      if (this.guard === undefined) {
-        this.guard = ant;
-        this.guard.setPlace(this);
-        return true;
-      }
+    if (this.ant == undefined) {
+      this.ant = ant;
+      this.ant.setPlace(this);
+      console.log("in addAnt, undefined before");
+      return true;
     }
-    // places ant if exits.
-    else
-      if (this.ant === undefined) {
-        this.ant = ant;
-        this.ant.setPlace(this);
-        return true;
-      }
+    // if (ant instanceof GuardAnt &&
+    //   this.ant != ant && this.ant.getGuard() == undefined) {
+    if (ant instanceof GuardAnt &&
+      !(this.ant instanceof GuardAnt) && this.ant.getGuard() == undefined) {
+      // let guard:GuardAnt = new GuardAnt();
+      // guard.setGuaredAnt(this.ant);
+      console.log("in addAnt, add guard to current this ant");
+      this.ant.setGuard(ant); // 保护的蚂蚁加个guard
+      this.ant.getGuard().setGuaredAnt(this.ant);
+      // this.ant = ant;
+      return true;
+    }
     return false;
+    // if (ant instanceof GuardAnt) {
+    //   if (this.guard === undefined) {
+    //     this.guard = ant;
+    //     this.guard.setPlace(this);
+    //     return true;
+    //   }
+    // }
+    // // places ant if exits.
+    // else
+    //   if (this.ant === undefined) {
+    //     this.ant = ant;
+    //     this.ant.setPlace(this);
+    //     return true;
+    //   }
+    // return false;
   }
-
 
   /**
    * this method removes current ant object in the system.
    * @returns returns current ant object. If it is a guard, returns guard.
    */
   removeAnt(): Ant {
-    if (this.guard !== undefined) {
-      let guard = this.guard;
-      this.guard = undefined;
-      return guard;
+    if (this.ant !== undefined) {
+      if (this.ant.getGuard() != undefined) {
+        let temp: GuardAnt = this.ant.getGuard();
+        this.ant.setGuard(undefined);
+        return temp;
+      } else {
+        let result = this.ant;
+        this.ant = undefined;
+        return this.ant;
+      }
     }
-    else {
-      let ant = this.ant;
-      this.ant = undefined;
-      return ant;
-    }
+    return undefined;
   }
 
   addBee(bee: Bee): void {
@@ -135,11 +155,11 @@ class Place {
   /**
    * this method excutes the removeAnt method if this is a water and if guard exists or current ant is not a Scuba Ant.
    */
-  act() { 
+  act() {
     if (this.water) {
-      if (this.guard) {
-        this.removeAnt();
-      }
+      // if (this.guard) {
+      //   this.removeAnt();
+      // }
       if (!(this.ant instanceof ScubaAnt)) {
         this.removeAnt();
       }
@@ -147,28 +167,27 @@ class Place {
   }
 }
 
-
 /**
  * This class extends Place and initializes the waves of bee, and able to add wave in this object.
  */
 class Hive extends Place {
   private waves: { [index: number]: Bee[] } = {}
 
-/**
- * Thid constructor initialzes the Hive.
- * @param beeArmor  beeAmor is a number of armor of bee.
-* @param beeDamage  beeAmor is a number of damage of bee.
- */
+  /**
+   * Thid constructor initialzes the Hive.
+   * @param beeArmor  beeAmor is a number of armor of bee.
+  * @param beeDamage  beeAmor is a number of damage of bee.
+   */
   constructor(private beeArmor: number, private beeDamage: number) {
     super('Hive');
   }
 
-/**
- * this method add a wave of bee into the Hive.
- * @param attackTurn  attackTurn is the turn that this wave is going to attack.
- * @param numBees  numBees is the number of bee.
- * @returns returns updated Hive.  
- */
+  /**
+   * this method add a wave of bee into the Hive.
+   * @param attackTurn  attackTurn is the turn that this wave is going to attack.
+   * @param numBees  numBees is the number of bee.
+   * @returns returns updated Hive.  
+   */
   addWave(attackTurn: number, numBees: number): Hive {
     let wave: Bee[] = [];
     // this loop initialzes each bee in to this wave and add this wave into the array of waves.
@@ -181,12 +200,12 @@ class Hive extends Place {
     return this;
   }
 
-/**
- * Comment for method ´doSomething´.
- * @param colony is the given AntColony object.
- * @param currentTurn is the number of current turn.
- * @returns  returns an array of bee.
- */
+  /**
+   * Comment for method ´doSomething´.
+   * @param colony is the given AntColony object.
+   * @param currentTurn is the number of current turn.
+   * @returns  returns an array of bee.
+   */
 
   invade(colony: AntColony, currentTurn: number): Bee[] {
     // if current wave exists, 
@@ -218,13 +237,13 @@ class AntColony {
 
 
 
-/**
- * This constructor initialzes the the colony.
- * @param startingFood is the number of food at start.
- * @param numTunnels is the number of tunnel.
- * @param tunnelLength is the length of tunnel.
- * @param moatFrequency is occurence of moat.
- */
+  /**
+   * This constructor initialzes the the colony.
+   * @param startingFood is the number of food at start.
+   * @param numTunnels is the number of tunnel.
+   * @param tunnelLength is the length of tunnel.
+   * @param moatFrequency is occurence of moat.
+   */
   constructor(startingFood: number, numTunnels: number, tunnelLength: number, moatFrequency = 0) {
     this.food = startingFood;
 
@@ -262,10 +281,10 @@ class AntColony {
 
   getBoosts(): { [index: string]: number } { return this.boosts; }
 
-/**
- * adds boost to the ant.
- * @param boost is the type of this boost.
- */
+  /**
+   * adds boost to the ant.
+   * @param boost is the type of this boost.
+   */
   addBoost(boost: string) {
     if (this.boosts[boost] === undefined) {
       this.boosts[boost] = 0;
@@ -274,12 +293,12 @@ class AntColony {
     console.log('Found a ' + boost + '!');
   }
 
-/**
- * deploys the ant.
- * @param ant is the Ant object.
- * @param place is the Place object
- * @returns a string to tell user whether this deployment is success or not.
- */
+  /**
+   * deploys the ant.
+   * @param ant is the Ant object.
+   * @param place is the Place object
+   * @returns a string to tell user whether this deployment is success or not.
+   */
   deployAnt(ant: Ant, place: Place): string {
     // determine whether this ant is affordable
     if (this.food >= ant.getFoodCost()) {
@@ -299,12 +318,12 @@ class AntColony {
   }
 
 
-/**
- * applys boost on the ant.
- * @param boost is the type of this boost.
- * @param place is the place in the colony.
- * @returns  a string to tell user whether this boost is successfully implemented or not..
- */
+  /**
+   * applys boost on the ant.
+   * @param boost is the type of this boost.
+   * @param place is the place in the colony.
+   * @returns  a string to tell user whether this boost is successfully implemented or not..
+   */
   applyBoost(boost: string, place: Place): string {
     if (this.boosts[boost] === undefined || this.boosts[boost] < 1) {
       return 'no such boost';
@@ -317,38 +336,37 @@ class AntColony {
     return undefined;
   }
 
-/**
- * applys boost on the ant.
- * @param boost is the type of this boost.
- * @param place is the place in the colony.
- * @returns  a string to tell user whether this boost is successfully implemented or not.
- */
+  /**
+   * applys boost on the ant.
+   * @param boost is the type of this boost.
+   * @param place is the place in the colony.
+   * @returns  a string to tell user whether this boost is successfully implemented or not.
+   */
+  // !!!!
   antsAct() {
     // tell every single ant to act based on different types
     this.getAllAnts().forEach((ant) => {
       // if this is a guard ant
       if (ant instanceof GuardAnt) {
         let guarded = ant.getGuarded();
-        if (guarded)
-          guarded.act(this);
       }
       ant.act(this);
     });
   }
 
 
-/**
- * define the bee's action.
- */
+  /**
+   * define the bee's action.
+   */
   beesAct() {
     this.getAllBees().forEach((bee) => {
       bee.act();
     });
   }
 
-/**
- * defines the action for places.
- */
+  /**
+   * defines the action for places.
+   */
   placesAct() {
     // go through each single location in the colony.
     for (let i = 0; i < this.places.length; i++) {
@@ -427,10 +445,10 @@ class AntGame {
    */
   deployAnt(antType: string, placeCoordinates: string): string {
     let ant;
-    var factory:Factory = new AntFactory();
-    if(factory.createAntObject(antType) != null){
-      ant = factory.createAntObject(antType) 
-    }else{
+    var factory: Factory = new AntFactory();
+    if (factory.createAntObject(antType) != null) {
+      ant = factory.createAntObject(antType)
+    } else {
       return 'unknown ant type';
     }
     // deploys the ant or return a warning if the geolocation input is not correct.

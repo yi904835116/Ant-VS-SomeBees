@@ -1,26 +1,26 @@
 "use strict";
-var ants_1 = require("./ants");
-var vorpal = require('vorpal');
-var chalk = require("chalk");
-var _ = require("lodash");
-var Vorpal = vorpal();
+const ants_1 = require("./ants");
+let vorpal = require('vorpal');
+const chalk = require("chalk");
+const _ = require("lodash");
+const Vorpal = vorpal();
 function showMapOf(game) {
     console.log(getMap(game));
 }
 exports.showMapOf = showMapOf;
 function getMap(game) {
-    var places = game.getPlaces();
-    var tunnelLength = places[0].length;
-    var beeIcon = chalk.bgYellow.black('B');
-    var map = '';
+    let places = game.getPlaces();
+    let tunnelLength = places[0].length;
+    let beeIcon = chalk.bgYellow.black('B');
+    let map = '';
     map += chalk.bold('The Colony is under attack!\n');
-    map += "Turn: " + game.getTurn() + ", Food: " + game.getFood() + ", Boosts available: [" + game.getBoostNames() + "]\n";
+    map += `Turn: ${game.getTurn()}, Food: ${game.getFood()}, Boosts available: [${game.getBoostNames()}]\n`;
     map += '     ' + _.range(0, tunnelLength).join('    ') + '      Hive' + '\n';
-    for (var i = 0; i < places.length; i++) {
+    for (let i = 0; i < places.length; i++) {
         map += '    ' + Array(tunnelLength + 1).join('=====');
         if (i === 0) {
             map += '    ';
-            var hiveBeeCount = game.getHiveBeesCount();
+            let hiveBeeCount = game.getHiveBeesCount();
             if (hiveBeeCount > 0) {
                 map += beeIcon;
                 map += (hiveBeeCount > 1 ? hiveBeeCount : ' ');
@@ -28,8 +28,8 @@ function getMap(game) {
         }
         map += '\n';
         map += i + ')  ';
-        for (var j = 0; j < places[i].length; j++) {
-            var place = places[i][j];
+        for (let j = 0; j < places[i].length; j++) {
+            let place = places[i][j];
             map += iconFor(place.getAnt());
             map += ' ';
             if (place.getBees().length > 0) {
@@ -42,8 +42,8 @@ function getMap(game) {
             map += ' ';
         }
         map += '\n    ';
-        for (var j = 0; j < places[i].length; j++) {
-            var place = places[i][j];
+        for (let j = 0; j < places[i].length; j++) {
+            let place = places[i][j];
             if (place.isWater()) {
                 map += chalk.bgCyan('~~~~') + ' ';
             }
@@ -82,9 +82,9 @@ function play(game) {
         .alias('add', 'd')
         .autocomplete(['Grower', 'Thrower', 'Eater', 'Scuba', 'Guard'])
         .action(function (args, callback) {
-        var error = game.deployAnt(args.antType, args.tunnel);
+        let error = game.deployAnt(args.antType, args.tunnel);
         if (error) {
-            Vorpal.log("Invalid deployment: " + error + ".");
+            Vorpal.log(`Invalid deployment: ${error}.`);
         }
         else {
             Vorpal.log(getMap(game));
@@ -95,9 +95,9 @@ function play(game) {
         .command('remove <tunnel>', 'Removes the ant from the tunnel (as "row,col" eg. "0,6").')
         .alias('rm')
         .action(function (args, callback) {
-        var error = game.removeAnt(args.tunnel);
+        let error = game.removeAnt(args.tunnel);
         if (error) {
-            Vorpal.log("Invalid removal: " + error + ".");
+            Vorpal.log(`Invalid removal: ${error}.`);
         }
         else {
             Vorpal.log(getMap(game));
@@ -107,11 +107,11 @@ function play(game) {
     Vorpal
         .command('boost <boost> <tunnel>', 'Applies a boost to the ant in a tunnel (as "row,col" eg. "0,6")')
         .alias('b')
-        .autocomplete({ data: function () { return game.getBoostNames(); } })
+        .autocomplete({ data: () => game.getBoostNames() })
         .action(function (args, callback) {
-        var error = game.boostAnt(args.boost, args.tunnel);
+        let error = game.boostAnt(args.boost, args.tunnel);
         if (error) {
-            Vorpal.log("Invalid boost: " + error);
+            Vorpal.log(`Invalid boost: ${error}`);
         }
         callback();
     });
@@ -121,7 +121,7 @@ function play(game) {
         .action(function (args, callback) {
         game.takeTurn();
         Vorpal.log(getMap(game));
-        var won = game.gameIsWon();
+        let won = game.gameIsWon();
         if (won === true) {
             Vorpal.log(chalk.green('Yaaaay---\nAll bees are vanquished. You win!\n'));
         }

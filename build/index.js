@@ -1,6 +1,6 @@
 "use strict";
-var game_1 = require("./game");
-var ui_1 = require("./ui");
+const game_1 = require("./game");
+const ui_1 = require("./ui");
 if (process.argv[2] === '--debug') {
     var colony = new game_1.AntColony(16, 1, 8, 0);
     var hive = new game_1.Hive(3, 1)
