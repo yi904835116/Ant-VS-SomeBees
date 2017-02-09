@@ -332,7 +332,7 @@ function attackAction(ant: Ant, boost: String, place: Place,damage:number) {
     let boostAdding: BoostSetter = new StickyLeafSetter();
     boostAdding.act(place, ant,damage);
   } else if (boost == "IcyLeaf") {
-    let boostAdding: BoostSetter = new StickyLeafSetter();
+    let boostAdding: BoostSetter = new IcyLeafSetter();
     boostAdding.act(place, ant,damage);
   } else if (boost == "BugSpray") {
     let boostAdding: BoostSetter = new BugSpraySetter();
@@ -362,52 +362,6 @@ let generateBoost: GenerateBoost = function (colony: AntColony) {
     colony.addBoost('BugSpray');
   }
 }
-
-
-
-// strategy pattern
-interface SetBoostFunction {
-  (ant: Ant, boost: string, place: Place, damage: number): void;
-
-}
-
-let boostFunction: SetBoostFunction = function (ant: Ant, boost: string, place: Place, damage: number) {
-
-  if (boost !== 'BugSpray') {
-    let target;
-    if (boost === 'FlyingLeaf')
-      target = place.getClosestBee(5);
-    else
-      target = place.getClosestBee(3);
-    // if the Scuba ant have the closest target.
-    if (target) {
-      console.log(ant + ' throws a leaf at ' + target);
-      target.reduceArmor(damage);
-      // applies StickyLeaf boost on this Scuba ant.
-      if (boost === 'StickyLeaf') {
-        target.setStatus('stuck');
-        console.log(target + ' is stuck!');
-      }
-      // applies IcyLeaf boost on this Scuba ant.
-      if (boost === 'IcyLeaf') {
-        target.setStatus('cold');
-        console.log(target + ' is cold!');
-      }
-      boost = undefined;
-    }
-  }
-  // applies BugSpray boost on this Scuba ant that kills all of the insects in that tunnel by 10 armor
-  else {
-    console.log(ant + ' sprays bug repellant everywhere!');
-    let target = place.getClosestBee(0);
-    while (target) {
-      target.reduceArmor(10);
-      target = place.getClosestBee(0);
-    }
-    ant.reduceArmor(10);
-  }
-}
-
 
 interface BoostSetter {
   act(place: Place, ant: Ant,damage:number);
@@ -457,7 +411,7 @@ class StickyLeafSetter implements BoostSetter {
   }
 }
 
-class IcyLeaf implements BoostSetter {
+class IcyLeafSetter implements BoostSetter {
   act(place: Place, ant: Ant,damage:number) {
     let target = place.getClosestBee(3);
     if (target) {

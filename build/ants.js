@@ -213,7 +213,7 @@ function attackAction(ant, boost, place, damage) {
         boostAdding.act(place, ant, damage);
     }
     else if (boost == "IcyLeaf") {
-        let boostAdding = new StickyLeafSetter();
+        let boostAdding = new IcyLeafSetter();
         boostAdding.act(place, ant, damage);
     }
     else if (boost == "BugSpray") {
@@ -242,37 +242,6 @@ let generateBoost = function (colony) {
     }
     else if (roll < 0.95) {
         colony.addBoost('BugSpray');
-    }
-};
-let boostFunction = function (ant, boost, place, damage) {
-    if (boost !== 'BugSpray') {
-        let target;
-        if (boost === 'FlyingLeaf')
-            target = place.getClosestBee(5);
-        else
-            target = place.getClosestBee(3);
-        if (target) {
-            console.log(ant + ' throws a leaf at ' + target);
-            target.reduceArmor(damage);
-            if (boost === 'StickyLeaf') {
-                target.setStatus('stuck');
-                console.log(target + ' is stuck!');
-            }
-            if (boost === 'IcyLeaf') {
-                target.setStatus('cold');
-                console.log(target + ' is cold!');
-            }
-            boost = undefined;
-        }
-    }
-    else {
-        console.log(ant + ' sprays bug repellant everywhere!');
-        let target = place.getClosestBee(0);
-        while (target) {
-            target.reduceArmor(10);
-            target = place.getClosestBee(0);
-        }
-        ant.reduceArmor(10);
     }
 };
 class NonBoostSetter {
@@ -315,7 +284,7 @@ class StickyLeafSetter {
         }
     }
 }
-class IcyLeaf {
+class IcyLeafSetter {
     act(place, ant, damage) {
         let target = place.getClosestBee(3);
         if (target) {
