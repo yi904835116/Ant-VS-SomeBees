@@ -1,29 +1,46 @@
 import { Insect, Bee, Ant, GrowerAnt, ThrowerAnt, EaterAnt, ScubaAnt, GuardAnt } from './ants';
 import { Factory, AntFactory } from './ants';
 
+
+export abstract class PlaceParent {
+  abstract act();
+  abstract getName();
+  abstract getAnt();  
+  abstract addBee(bee);
+  abstract getEntrance();
+  abstract addAnt(an);
+  abstract getExit();
+  abstract setEntrance(curr: PlaceParent);
+  abstract getBees();
+  abstract exitBee(bee: Bee);
+  abstract removeInsect(insect: Insect);
+  abstract getClosestBee(max, min?): Bee;
+  abstract removeBee(bee);
+  abstract removeAnt();
+}
+
 /**
  * This class does the major calculation of movement or types of ant and bee, and judges the geolocation
  */
-class Place {
-  protected ant: Ant;  // ant[]
+class Place extends PlaceParent{
+  protected ant: Ant;
   protected bees: Bee[] = [];
 
   constructor(readonly name: string,
-    protected readonly water = false,
-    private exit?: Place,
-    private entrance?: Place) { }
+    private exit?: PlaceParent,
+    private entrance?: PlaceParent) {
+      super();
+    }
 
-  getExit(): Place { return this.exit; }
+  getExit(): PlaceParent { return this.exit; }
 
   setEntrance(place: Place) { this.entrance = place; }
 
-  isWater(): boolean { return this.water; }
-
-  /**
-   * @returns returns current guard if exist otherwise ant.
-   */
 
 
+  getName() {
+    return this.name;
+  }
   getAnt(): Ant {
     if (this.ant != undefined && this.ant.getGuard() != undefined)
       return this.ant.getGuard();
@@ -31,13 +48,12 @@ class Place {
       return this.ant;
   }
 
-  //这里要改一下 应该去掉 然后把其他相应的地方修改
-  // getGuardedAnt(): Ant {
-  //    return this.ant;
-  // }
-
   getBees(): Bee[] { return this.bees; }
 
+
+  getEntrance() {
+    return this.entrance;
+  }
 
   /**
    * This method gets the closest bee object.
@@ -46,17 +62,16 @@ class Place {
    * @returns  return a bee object.
    */
   getClosestBee(maxDistance: number, minDistance: number = 0): Bee {
-    let p: Place = this;
+    let p: PlaceParent = this;
     // try to determine the bees in the closest until it reaches minimum distance.
     for (let dist = 0; p !== undefined && dist <= maxDistance; dist++) {
-      if (dist >= minDistance && p.bees.length > 0) {
-        return p.bees[0];
+      if (dist >= minDistance && p.getBees().length > 0) {
+        return p.getBees[0];
       }
-      p = p.entrance;
+      p = p.getEntrance();
     }
     return undefined;
   }
-
 
   /**
    * this method adds a ant object into the system.
@@ -64,19 +79,15 @@ class Place {
    * @returns returns whether this place has successfully been set.
    */
   addAnt(ant: Ant): boolean {
-    // places guard ant if it exists.
+    // places guard ant if it exists
     if (this.ant == undefined) {
       this.ant = ant;
       this.ant.setPlace(this);
       console.log("in addAnt, undefined before");
       return true;
     }
-    // if (ant instanceof GuardAnt &&
-    //   this.ant != ant && this.ant.getGuard() == undefined) {
     if (ant instanceof GuardAnt &&
       !(this.ant instanceof GuardAnt) && this.ant.getGuard() == undefined) {
-      // let guard:GuardAnt = new GuardAnt();
-      // guard.setGuaredAnt(this.ant);
       console.log("in addAnt, add guard to current this ant");
       this.ant.setGuard(ant); // 保护的蚂蚁加个guard
       this.ant.getGuard().setGuaredAnt(this.ant);
@@ -84,21 +95,6 @@ class Place {
       return true;
     }
     return false;
-    // if (ant instanceof GuardAnt) {
-    //   if (this.guard === undefined) {
-    //     this.guard = ant;
-    //     this.guard.setPlace(this);
-    //     return true;
-    //   }
-    // }
-    // // places ant if exits.
-    // else
-    //   if (this.ant === undefined) {
-    //     this.ant = ant;
-    //     this.ant.setPlace(this);
-    //     return true;
-    //   }
-    // return false;
   }
 
   /**
@@ -152,20 +148,77 @@ class Place {
     }
   }
 
-  /**
-   * this method excutes the removeAnt method if this is a water and if guard exists or current ant is not a Scuba Ant.
-   */
-  act() {
-    if (this.water) {
-      // if (this.guard) {
-      //   this.removeAnt();
-      // }
-      if (!(this.ant instanceof ScubaAnt)) {
-        this.removeAnt();
-      }
-    }
+
+  act() { }
+}
+
+abstract class PlaceDecorator extends PlaceParent {
+  protected decorated: Place;
+
+  constructor(decorated: Place) {
+    super();
+    this.decorated = decorated;
   }
 }
+
+export class WaterDecorator extends PlaceDecorator {
+  getAnt() {
+    return this.decorated.getAnt();
+  }
+
+  getBees() {
+    return this.decorated.getBees();
+  }
+
+  addBee(bee: Bee) {
+    this.decorated.addBee(bee);
+  }
+
+  setEntrance(curr) {
+    this.decorated.setEntrance(curr);
+  }
+
+  getEntrance() {
+    return this.decorated.getEntrance();
+  }
+
+  exitBee(bee) {
+    this.decorated.exitBee(bee);
+  }
+
+  getClosestBee(max: number, min: number = 0): Bee {
+    return this.decorated.getClosestBee(max, min);
+  }
+
+  removeBee(bee) {
+    this.decorated.removeBee(bee);
+  }
+
+  getName() {
+    return this.decorated.getName();
+  }
+
+  getExit() {
+    return this.decorated.getExit();
+  }
+
+  removeInsect(insect) {
+    this.decorated.removeInsect(insect);
+  }
+
+  addAnt(ant: Ant): boolean {
+    return this.decorated.addAnt(ant);
+  }
+  removeAnt() {
+    return this.decorated.removeAnt();
+  }
+
+  act() {
+    if (!(this.decorated.getAnt() instanceof ScubaAnt))
+      this.decorated.removeAnt();
+  }
+}
+
 
 /**
  * This class extends Place and initializes the waves of bee, and able to add wave in this object.
@@ -212,7 +265,7 @@ class Hive extends Place {
     if (this.waves[currentTurn] !== undefined) {
       this.waves[currentTurn].forEach((bee) => {
         this.removeBee(bee);
-        let entrances: Place[] = colony.getEntrances();
+        let entrances: PlaceParent[] = colony.getEntrances();
         let randEntrance: number = Math.floor(Math.random() * entrances.length);
         entrances[randEntrance].addBee(bee);
       });
@@ -230,13 +283,10 @@ class Hive extends Place {
  */
 class AntColony {
   private food: number;
-  private places: Place[][] = [];
-  private beeEntrances: Place[] = [];
+  private places: PlaceParent[][] = [];
+  private beeEntrances: PlaceParent[] = [];
   private queenPlace: Place = new Place('Ant Queen');
   private boosts: { [index: string]: number } = { 'FlyingLeaf': 1, 'StickyLeaf': 1, 'IcyLeaf': 1, 'BugSpray': 0 }
-
-
-
   /**
    * This constructor initialzes the the colony.
    * @param startingFood is the number of food at start.
@@ -247,19 +297,18 @@ class AntColony {
   constructor(startingFood: number, numTunnels: number, tunnelLength: number, moatFrequency = 0) {
     this.food = startingFood;
 
-    let prev: Place;
+    let prev: PlaceParent;
     for (let tunnel = 0; tunnel < numTunnels; tunnel++) {
-      let curr: Place = this.queenPlace;
+      let curr: PlaceParent = this.queenPlace;
       this.places[tunnel] = [];
       for (let step = 0; step < tunnelLength; step++) {
         let typeName = 'tunnel';
-        if (moatFrequency !== 0 && (step + 1) % moatFrequency === 0) {
-          typeName = 'water';
-        }
-
         prev = curr;
         let locationId: string = tunnel + ',' + step;
-        curr = new Place(typeName + '[' + locationId + ']', typeName == 'water', prev);
+        if (moatFrequency !== 0 && (step + 1) % moatFrequency === 0) {
+          curr = new WaterDecorator(new Place(typeName + '[' + locationId + ']', prev));
+        } else
+          curr = new Place(typeName + '[' + locationId + ']', prev);
         prev.setEntrance(curr);
         this.places[tunnel][step] = curr;
       }
@@ -271,9 +320,9 @@ class AntColony {
 
   increaseFood(amount: number): void { this.food += amount; }
 
-  getPlaces(): Place[][] { return this.places; }
+  getPlaces(): PlaceParent[][] { return this.places; }
 
-  getEntrances(): Place[] { return this.beeEntrances; }
+  getEntrances(): PlaceParent[] { return this.beeEntrances; }
 
   getQueenPlace(): Place { return this.queenPlace; }
 
@@ -299,7 +348,7 @@ class AntColony {
    * @param place is the Place object
    * @returns a string to tell user whether this deployment is success or not.
    */
-  deployAnt(ant: Ant, place: Place): string {
+  deployAnt(ant: Ant, place: PlaceParent): string {
     // determine whether this ant is affordable
     if (this.food >= ant.getFoodCost()) {
       let success = place.addAnt(ant);
@@ -313,7 +362,7 @@ class AntColony {
     return 'not enough food';
   }
 
-  removeAnt(place: Place) {
+  removeAnt(place: PlaceParent) {
     place.removeAnt();
   }
 
@@ -493,7 +542,7 @@ class AntGame {
     }
   }
 
-  getPlaces(): Place[][] { return this.colony.getPlaces(); }
+  getPlaces(): PlaceParent[][] { return this.colony.getPlaces(); }
   getFood(): number { return this.colony.getFood(); }
   getHiveBeesCount(): number { return this.hive.getBees().length; }
   getBoostNames(): string[] {

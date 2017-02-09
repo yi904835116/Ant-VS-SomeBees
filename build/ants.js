@@ -87,8 +87,11 @@ class ThrowerAnt extends Ant {
         this.name = "Thrower";
         this.damage = 1;
     }
+    getDamage() {
+        return this.damage;
+    }
     act() {
-        boostFunction(this, this.boost, this.place, this.damage);
+        attackAction(this, this.boost, this.place, this.damage);
     }
 }
 exports.ThrowerAnt = ThrowerAnt;
@@ -177,8 +180,11 @@ class ScubaAnt extends Ant {
         this.name = "Scuba";
         this.damage = 1;
     }
+    getDamage() {
+        return this.damage;
+    }
     act() {
-        boostFunction(this, this.boost, this.place, this.damage);
+        attackAction(this, this.boost, this.place, this.damage);
     }
 }
 exports.ScubaAnt = ScubaAnt;
@@ -197,6 +203,29 @@ class GuardAnt extends Ant {
     act() { }
 }
 exports.GuardAnt = GuardAnt;
+function attackAction(ant, boost, place, damage) {
+    if (boost == "FlyingLeaf") {
+        let boostAdding = new FlyingLeafSetter();
+        boostAdding.act(place, ant, damage);
+    }
+    else if (boost == "StickyLeaf") {
+        let boostAdding = new StickyLeafSetter();
+        boostAdding.act(place, ant, damage);
+    }
+    else if (boost == "IcyLeaf") {
+        let boostAdding = new StickyLeafSetter();
+        boostAdding.act(place, ant, damage);
+    }
+    else if (boost == "BugSpray") {
+        let boostAdding = new BugSpraySetter();
+        boostAdding.act(place, ant, damage);
+    }
+    else {
+        let boostAdding = new NonBoostSetter();
+        boostAdding.act(place, ant, damage);
+    }
+    ant.setBoost(undefined);
+}
 let generateBoost = function (colony) {
     let roll = Math.random();
     if (roll < 0.6) {
@@ -246,6 +275,57 @@ let boostFunction = function (ant, boost, place, damage) {
         ant.reduceArmor(10);
     }
 };
+class NonBoostSetter {
+    act(place, ant, damage) {
+        let target = place.getClosestBee(3);
+        if (target) {
+            console.log(ant + ' throws a leaf at ' + target);
+            target.reduceArmor(damage);
+        }
+    }
+}
+class BugSpraySetter {
+    act(place, ant, damage) {
+        console.log(ant + ' sprays bug repellant everywhere!');
+        let target = place.getClosestBee(0);
+        while (target) {
+            target.reduceArmor(10);
+            target = place.getClosestBee(0);
+        }
+        ant.reduceArmor(10);
+    }
+}
+class FlyingLeafSetter {
+    act(place, ant, damage) {
+        let target = place.getClosestBee(5);
+        if (target) {
+            console.log(ant + ' throws a leaf at ' + target);
+            target.reduceArmor(damage);
+        }
+    }
+}
+class StickyLeafSetter {
+    act(place, ant, damage) {
+        let target = place.getClosestBee(3);
+        if (target) {
+            console.log(ant + ' throws a leaf at ' + target);
+            target.reduceArmor(damage);
+            target.setStatus('stuck');
+            console.log(target + ' is stuck!');
+        }
+    }
+}
+class IcyLeaf {
+    act(place, ant, damage) {
+        let target = place.getClosestBee(3);
+        if (target) {
+            console.log(ant + ' throws a leaf at ' + target);
+            target.reduceArmor(damage);
+            target.setStatus('cold');
+            console.log(target + ' is cold!');
+        }
+    }
+}
 class AntFactory {
     createAntObject(type) {
         switch (type.toLowerCase()) {

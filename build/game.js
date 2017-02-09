@@ -1,17 +1,22 @@
 "use strict";
 const ants_1 = require("./ants");
 const ants_2 = require("./ants");
-class Place {
-    constructor(name, water = false, exit, entrance) {
+class PlaceParent {
+}
+exports.PlaceParent = PlaceParent;
+class Place extends PlaceParent {
+    constructor(name, exit, entrance) {
+        super();
         this.name = name;
-        this.water = water;
         this.exit = exit;
         this.entrance = entrance;
         this.bees = [];
     }
     getExit() { return this.exit; }
     setEntrance(place) { this.entrance = place; }
-    isWater() { return this.water; }
+    getName() {
+        return this.name;
+    }
     getAnt() {
         if (this.ant != undefined && this.ant.getGuard() != undefined)
             return this.ant.getGuard();
@@ -19,13 +24,16 @@ class Place {
             return this.ant;
     }
     getBees() { return this.bees; }
+    getEntrance() {
+        return this.entrance;
+    }
     getClosestBee(maxDistance, minDistance = 0) {
         let p = this;
         for (let dist = 0; p !== undefined && dist <= maxDistance; dist++) {
-            if (dist >= minDistance && p.bees.length > 0) {
-                return p.bees[0];
+            if (dist >= minDistance && p.getBees().length > 0) {
+                return p.getBees[0];
             }
-            p = p.entrance;
+            p = p.getEntrance();
         }
         return undefined;
     }
@@ -87,15 +95,61 @@ class Place {
             this.removeBee(insect);
         }
     }
-    act() {
-        if (this.water) {
-            if (!(this.ant instanceof ants_1.ScubaAnt)) {
-                this.removeAnt();
-            }
-        }
-    }
+    act() { }
 }
 exports.Place = Place;
+class PlaceDecorator extends PlaceParent {
+    constructor(decorated) {
+        super();
+        this.decorated = decorated;
+    }
+}
+class WaterDecorator extends PlaceDecorator {
+    getAnt() {
+        return this.decorated.getAnt();
+    }
+    getBees() {
+        return this.decorated.getBees();
+    }
+    addBee(bee) {
+        this.decorated.addBee(bee);
+    }
+    setEntrance(curr) {
+        this.decorated.setEntrance(curr);
+    }
+    getEntrance() {
+        return this.decorated.getEntrance();
+    }
+    exitBee(bee) {
+        this.decorated.exitBee(bee);
+    }
+    getClosestBee(max, min = 0) {
+        return this.decorated.getClosestBee(max, min);
+    }
+    removeBee(bee) {
+        this.decorated.removeBee(bee);
+    }
+    getName() {
+        return this.decorated.getName();
+    }
+    getExit() {
+        return this.decorated.getExit();
+    }
+    removeInsect(insect) {
+        this.decorated.removeInsect(insect);
+    }
+    addAnt(ant) {
+        return this.decorated.addAnt(ant);
+    }
+    removeAnt() {
+        return this.decorated.removeAnt();
+    }
+    act() {
+        if (!(this.decorated.getAnt() instanceof ants_1.ScubaAnt))
+            this.decorated.removeAnt();
+    }
+}
+exports.WaterDecorator = WaterDecorator;
 class Hive extends Place {
     constructor(beeArmor, beeDamage) {
         super('Hive');
@@ -142,12 +196,13 @@ class AntColony {
             this.places[tunnel] = [];
             for (let step = 0; step < tunnelLength; step++) {
                 let typeName = 'tunnel';
-                if (moatFrequency !== 0 && (step + 1) % moatFrequency === 0) {
-                    typeName = 'water';
-                }
                 prev = curr;
                 let locationId = tunnel + ',' + step;
-                curr = new Place(typeName + '[' + locationId + ']', typeName == 'water', prev);
+                if (moatFrequency !== 0 && (step + 1) % moatFrequency === 0) {
+                    curr = new WaterDecorator(new Place(typeName + '[' + locationId + ']', prev));
+                }
+                else
+                    curr = new Place(typeName + '[' + locationId + ']', prev);
                 prev.setEntrance(curr);
                 this.places[tunnel][step] = curr;
             }

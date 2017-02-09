@@ -113,7 +113,6 @@ export abstract class Ant extends Insect {
     super(armor, place);
   }
 
-
   getGuard(): GuardAnt {
     return this.guard;
   }
@@ -171,11 +170,16 @@ export class ThrowerAnt extends Ant {
     super(1, 4);
   }
 
+  getDamage(): number {
+    return this.damage;
+  }
+
   /**
    * defines the action of theThrower ant to attack the bee based on different boosts.
    */
   act() {
-    boostFunction(this, this.boost, this.place, this.damage);
+    // boostFunction(this, this.boost, this.place, this.damage);
+    attackAction(this, this.boost, this.place,this.damage);
   }
 }
 
@@ -279,10 +283,13 @@ export class ScubaAnt extends Ant {
     super(1, 5)
   }
 
+  getDamage(): number {
+    return this.damage;
+  }
+
   // defines the action of Scuba ant and applies the boost if any.
   act() {
-    // if the boost is not BugSpray
-    boostFunction(this, this.boost, this.place, this.damage);
+    attackAction(this, this.boost, this.place,this.damage);
   }
 }
 
@@ -317,6 +324,25 @@ export class GuardAnt extends Ant {
   act() { }
 }
 
+function attackAction(ant: Ant, boost: String, place: Place,damage:number) {
+  if (boost == "FlyingLeaf") {
+    let boostAdding: BoostSetter = new FlyingLeafSetter();
+    boostAdding.act(place, ant,damage);
+  } else if (boost == "StickyLeaf") {
+    let boostAdding: BoostSetter = new StickyLeafSetter();
+    boostAdding.act(place, ant,damage);
+  } else if (boost == "IcyLeaf") {
+    let boostAdding: BoostSetter = new StickyLeafSetter();
+    boostAdding.act(place, ant,damage);
+  } else if (boost == "BugSpray") {
+    let boostAdding: BoostSetter = new BugSpraySetter();
+    boostAdding.act(place, ant,damage);
+  } else {
+    let boostAdding: BoostSetter = new NonBoostSetter();
+    boostAdding.act(place, ant,damage);
+  }
+  ant.setBoost(undefined);
+}
 
 interface GenerateBoost {
   (colony: AntColony): void;
@@ -353,12 +379,10 @@ let boostFunction: SetBoostFunction = function (ant: Ant, boost: string, place: 
       target = place.getClosestBee(5);
     else
       target = place.getClosestBee(3);
-
     // if the Scuba ant have the closest target.
     if (target) {
       console.log(ant + ' throws a leaf at ' + target);
       target.reduceArmor(damage);
-
       // applies StickyLeaf boost on this Scuba ant.
       if (boost === 'StickyLeaf') {
         target.setStatus('stuck');
@@ -385,7 +409,66 @@ let boostFunction: SetBoostFunction = function (ant: Ant, boost: string, place: 
 }
 
 
+interface BoostSetter {
+  act(place: Place, ant: Ant,damage:number);
+}
 
+class NonBoostSetter implements BoostSetter {
+  act(place: Place, ant: Ant,damage:number) {
+    let target = place.getClosestBee(3);
+    if(target){
+    console.log(ant + ' throws a leaf at ' + target);
+    target.reduceArmor(damage);
+    }
+  }
+}
+
+class BugSpraySetter implements BoostSetter {
+  act(place: Place, ant: Ant, damage:number) {
+    console.log(ant + ' sprays bug repellant everywhere!');
+    let target = place.getClosestBee(0);
+    while (target) {
+      target.reduceArmor(10);
+      target = place.getClosestBee(0);
+    }
+    ant.reduceArmor(10);
+  }
+}
+
+class FlyingLeafSetter implements BoostSetter {
+  act(place: Place, ant: Ant, damage:number) {
+    let target = place.getClosestBee(5);
+    if (target) {
+      console.log(ant + ' throws a leaf at ' + target);
+      target.reduceArmor(damage);
+    }
+  }
+}
+
+class StickyLeafSetter implements BoostSetter {
+  act(place: Place, ant: Ant,damage:number) {
+    let target = place.getClosestBee(3);
+    if (target) {
+      console.log(ant + ' throws a leaf at ' + target);
+      target.reduceArmor(damage);
+      target.setStatus('stuck');
+      console.log(target + ' is stuck!');
+    }
+  }
+}
+
+class IcyLeaf implements BoostSetter {
+  act(place: Place, ant: Ant,damage:number) {
+    let target = place.getClosestBee(3);
+    if (target) {
+      console.log(ant + ' throws a leaf at ' + target);
+      target.reduceArmor(damage);
+      // applies IcyLeaf boost on this Scuba ant.
+      target.setStatus('cold');
+      console.log(target + ' is cold!');
+    }
+  }
+}
 
 export interface Factory {
   createAntObject(type: string): Ant;
@@ -438,109 +521,4 @@ export class AntFactory implements Factory {
     }
   }
 }
-
-
-// class GrowerAntFactory implements AntFactory {
-
-//   createAntObject(type: string): Ant {
-//     if (type.toLocaleLowerCase() == "grower") {
-//       return new GrowerAnt;
-//     }
-//   }
-
-//   createAntSymbol(ant: Ant) {
-
-//     if (ant.name == "Grower") {
-//       return chalk.green('G');
-//     }
-//   }
-// }
-
-
-// class ThrowerAntFactory implements AntFactory {
-//   createAntObject(type: string): Ant {
-//     if (type.toLocaleLowerCase() == "thrower") {
-//       return new ThrowerAnt;
-//     }
-//   }
-
-//   createAntSymbol(ant) {
-//     if (ant.name == "Thrower") {
-//       return chalk.red('T');;
-//     }
-//   }
-// }
-
-
-// class EaterAntFactory implements AntFactory {
-//   createAntObject(type: string): Ant {
-//     if (type.toLocaleLowerCase() == "eater") {
-//       return new EaterAnt;
-//     }
-//   }
-
-//   createAntSymbol(ant) {
-    // if (ant.name == "Eater") {
-    //   if ((<EaterAnt>ant).isFull())
-    //     return chalk.yellow.bgMagenta('E');
-    //   else {
-    //     return chalk.magenta('E');
-    //   }
-    // }
-//   }
-// }
-
-// class ScubaAntFactory implements AntFactory {
-//   createAntObject(type: string): Ant {
-//     if (type.toLocaleLowerCase() == "scuba") {
-//       return new ScubaAnt;
-//     }
-//   }
-
-//   createAntSymbol(ant) {
-    // if (ant.name == "Scuba") {
-    //   return chalk.cyan('S');
-    // }
-//   }
-// }
-
-// class GuardAntFactory implements AntFactory {
-//   createAntObject(type: string): Ant {
-//     if (type.toLocaleLowerCase() == "guard") {
-//       return new GuardAnt;
-//     }
-//   }
-
-//   createAntSymbol(ant) {
-    // if (ant.name == "Guard") {
-    //   let guarded:Ant = (<GuardAnt>ant).getGuarded();
-    //   if(guarded){
-    //     return chalk.underline(<AntFactory> createAntSymbol(guarded));
-    //   } else {
-    //     return chalk.underline('x'); 
-    //   }
-    // }
-//   }
-// }
-
-
-
-
-// export abstract class antFactory {
-
-//   createAnt(type: string) {
-//     switch (type.toLowerCase()) {
-//       case "grower":
-//         return new GrowerAnt();
-//       case "thrower":
-//         return new ThrowerAnt();
-//       case "eater":
-//         return new EaterAnt();
-//       case "scuba":
-//         return new ScubaAnt();
-//       case "guard":
-//         return new GuardAnt();
-//     }
-//   }
-// }
 

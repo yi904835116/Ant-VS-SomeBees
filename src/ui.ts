@@ -1,4 +1,4 @@
-import {AntGame, AntColony, Place, Hive} from './game';
+import {AntGame, AntColony, Place, Hive, PlaceParent, WaterDecorator} from './game';
 import {Ant, EaterAnt, GuardAnt, Factory, AntFactory} from './ants';
 
 let vorpal = require('vorpal');
@@ -24,7 +24,7 @@ export function showMapOf(game:AntGame){
  * @param game is the the current game
  */
 function getMap(game:AntGame) {
-  let places:Place[][] = game.getPlaces();
+  let places:PlaceParent[][] = game.getPlaces();
   let tunnelLength = places[0].length;
   let beeIcon = chalk.bgYellow.black('B');
    
@@ -53,7 +53,7 @@ function getMap(game:AntGame) {
     
     // draws the component for each tunnel
     for(let j=0; j<places[i].length; j++){ 
-      let place:Place = places[i][j];
+      let place:PlaceParent = places[i][j];
 
       map += iconFor(place.getAnt());
       map += ' '; 
@@ -71,7 +71,8 @@ function getMap(game:AntGame) {
     // draw the waters and tunnel sections.
     for(let j=0; j<places[i].length; j++){
       let place = places[i][j];
-      if(place.isWater()){
+      console.log(place instanceof WaterDecorator);
+      if(place instanceof WaterDecorator) {
         map += chalk.bgCyan('~~~~')+' ';
       } else {
         map += '==== ';
