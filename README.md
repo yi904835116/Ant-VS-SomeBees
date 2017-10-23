@@ -1,1 +1,2 @@
 # Ant-VS-SomeBees
+This game is working with a tower defense game called Ants vs. Some Bees (inspired by the PopCap game Plants vs. Zombies). In this game (which is played on the command-line), the player populates an ant colony with the bravest ants they can muster. The ants must protect their queen from the evil bees that invade their territory. Irritate the bees enough by throwing leaves at them, and they will be vanquished. Fail to pester the airborne intruders adequately, and your queen will succumb to the bees' wrath!
